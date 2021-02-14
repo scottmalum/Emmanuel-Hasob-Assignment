@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Models\CheckOut;
 use App\Models\ItemCheckOut;
+use App\Models\User;
 use Validator;
 
 class ProductController extends Controller
@@ -83,9 +84,14 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function show(Product $product, Request $request)
+    public function show($id)
     {
-        return new ProductIndexResource($product);
+        $product = Product::find($id);
+        if ($product) {
+
+            return new ProductIndexResource($product);
+        }
+        return response()->json(['message' => 'Product not found.'], 404);
     }
 
     /**
@@ -145,6 +151,17 @@ class ProductController extends Controller
         $cartItems = $request->cartItems;
         for ($i = 0; $i < count($cartItems); $i++) {
             $item = $cartItems[$i];
+
+            $product = Product::find($item['id']);
+            if (!$product) {
+                return response()->json(['error' => 'ProductId not found.'], 404);
+            }
+
+            //Check to compare if quantity of product inputed by user is greater than quantity of product available in the database
+            if ($product->quantity < $item['quantity']) {
+                return response()->json(['error' => 'Requested Product quantity is greater than available quantity in stock'], 412);
+            }
+
             ItemCheckOut::create([
                 'checkout_id' => $checkout['id'],
                 'product_id' => $item['id'],
@@ -165,10 +182,15 @@ class ProductController extends Controller
      * @param  \App\Models\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Product $product)
+    public function destroy($id)
     {
-        $product->delete();
+        $product = Product::find($id);
+        if ($product) {
 
-        return response('', 204);
+            $product->delete();
+
+            return response()->json(['message' => 'Product deleted Successfully']);
+        }
+        return response()->json(['message' => 'Product not found.'], 404);
     }
 }

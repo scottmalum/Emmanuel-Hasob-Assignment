@@ -34,6 +34,7 @@ Route::group([
 
 Route::get('products', [ProductController::class, 'index']);
 Route::put('update-product/{product}', [ProductController::class, 'update']);
-Route::get('search/{product}', [ProductController::class, 'show']);
+Route::get('search/{Id}', [ProductController::class, 'show']);
 Route::post('add-product', [ProductController::class, 'store']);
 Route::post('checkout/', [ProductController::class, 'checkout']);
+Route::post('delete-product/{Id}', [ProductController::class, 'destroy']);
